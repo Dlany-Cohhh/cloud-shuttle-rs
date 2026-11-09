@@ -1,3 +1,6 @@
+> [!IMPORTANT]
+> **本仓库已归档（2026-11-10）**：Rust 原生版源码已合并进主仓库的 [`rust/`](https://github.com/Dlany-Cohhh/cloud-shuttle/tree/main/rust)，后续版本、统一 Release 与 CI 都在 [Dlany-Cohhh/cloud-shuttle](https://github.com/Dlany-Cohhh/cloud-shuttle) 发布。本仓库的 `rs-v0.1.0` Release 仅作历史留存，请勿再使用这里的检查更新地址。
+
 # 云梭 CloudShuttle · Rust 原生应用进程（Windows / Linux）
 
 [PikPak 多账号下载器](https://github.com/Dlany-Cohhh/cloud-shuttle) 的 **Rust 版后端**：一个原生可执行文件，直接在本机跑起同一套 Web 控制台，用 `rclone` 编排多账号下载，不再依赖 Docker、Python 或常驻的 rclone RC 守护进程。
