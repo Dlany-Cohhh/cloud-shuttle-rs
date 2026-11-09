@@ -1,0 +1,24 @@
+[Unit]
+Description=CloudShuttle Rust native console (PikPak multi-account downloader)
+Documentation=https://github.com/Dlany-Cohhh/cloud-shuttle
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=cloud-shuttle
+Group=cloud-shuttle
+WorkingDirectory=/opt/cloud-shuttle
+EnvironmentFile=-/etc/cloud-shuttle.env
+ExecStart=/opt/cloud-shuttle/cloud-shuttle-rs --bind 0.0.0.0 --port 5566
+Restart=always
+RestartSec=5
+KillSignal=SIGTERM
+TimeoutStopSec=20
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+ReadWritePaths=/opt/cloud-shuttle/data /vol2/download
+
+[Install]
+WantedBy=multi-user.target

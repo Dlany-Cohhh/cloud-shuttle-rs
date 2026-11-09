@@ -1,0 +1,21 @@
+[package]
+name = "cloud-shuttle-rs"
+version = "0.1.0"
+edition = "2021"
+description = "PikPak 多账号下载器 · 云梭 CloudShuttle 的 Rust 原生应用进程（Windows / Linux）"
+license = "MIT"
+
+[dependencies]
+tokio = { version = "1", features = [
+    "rt-multi-thread", "macros", "signal", "process",
+    "time", "fs", "net", "sync", "io-util"
+] }
+axum = "0.8"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[profile.release]
+opt-level = 2
+lto = "thin"
+strip = true
+codegen-units = 1

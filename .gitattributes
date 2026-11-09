@@ -1,0 +1,5 @@
+# 禁止 Git 自动做换行归一化：源码里 build.sh / *.rs / *.py 是 LF，
+# PowerShell 脚本是 CRLF + UTF-8 BOM，各自按原字节保存。
+# 否则在 Windows 上 checkout 会把 build.sh 变成 CRLF，Linux 直接执行会报
+# `bad interpreter: /bin/bash^M`，PowerShell 5.1 又需要 BOM 才能正确显示中文。
+* -text

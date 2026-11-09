@@ -1,0 +1,96 @@
+# GitHub Actions 双平台构建模板（Rust 原生版）
+#
+# 以模板形式提供，避免与 Python / Docker 版仓库的发布流程混在一起。
+# 启用方式：复制为 .github/workflows/rust-release.yml 后提交
+#          （GitHub 网页端新建文件也可，无需额外 token scope）。
+#
+# 触发：push 标签 rs-v*，或手动 workflow_dispatch。
+# 产物：cloud-shuttle-rs-windows-x86_64.zip / cloud-shuttle-rs-linux-x86_64.tar.gz
+# 注意：Rust 版 tag 必须以 rs-v 开头，避免和 Python 版 v3.xx Release 混淆。
+
+name: build-rust-native
+
+on:
+  push:
+    tags: ['rs-v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            exe: cloud-shuttle-rs.exe
+            pack: zip
+          - os: ubuntu-latest
+            platform: linux
+            exe: cloud-shuttle-rs
+            pack: tar.gz
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout Rust sources
+        uses: actions/checkout@v4
+
+      - name: Checkout shared frontend (static/)
+        uses: actions/checkout@v4
+        with:
+          repository: Dlany-Cohhh/cloud-shuttle
+          path: frontend
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Check formatting and lints
+        run: |
+          cargo fmt --check
+          cargo clippy --all-targets -- -D warnings
+
+      - name: Build release
+        run: cargo build --release
+
+      - name: Assemble package (Windows)
+        if: matrix.platform == 'windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist\${{ matrix.platform }} | Out-Null
+          Copy-Item target\release\${{ matrix.exe }} dist\${{ matrix.platform }}\
+          Copy-Item -Recurse frontend\static dist\${{ matrix.platform }}\static
+          Copy-Item .env.example dist\${{ matrix.platform }}\
+          Compress-Archive -Path dist\${{ matrix.platform }}\* -DestinationPath cloud-shuttle-rs-windows-x86_64.zip
+
+      - name: Assemble package (Linux)
+        if: matrix.platform == 'linux'
+        run: |
+          mkdir -p dist/${{ matrix.platform }}
+          cp target/release/${{ matrix.exe }} dist/${{ matrix.platform }}/
+          cp -r frontend/static dist/${{ matrix.platform }}/static
+          cp .env.example dist/${{ matrix.platform }}/
+          tar -czf cloud-shuttle-rs-linux-x86_64.tar.gz -C dist/${{ matrix.platform }} .
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: cloud-shuttle-rs-${{ matrix.platform }}
+          path: ${{ matrix.platform == 'windows' && 'cloud-shuttle-rs-windows-x86_64.zip' || 'cloud-shuttle-rs-linux-x86_64.tar.gz' }}
+
+      - name: Attach to Release
+        if: startsWith(github.ref, 'refs/tags/rs-v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ matrix.platform == 'windows' && 'cloud-shuttle-rs-windows-x86_64.zip' || 'cloud-shuttle-rs-linux-x86_64.tar.gz' }}
+          generate_release_notes: true
